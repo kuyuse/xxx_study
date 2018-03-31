@@ -1,0 +1,46 @@
+
+- name: create user_info
+  user:
+    name: "{{ item.name }}"
+    createhome: yes
+    password: "{{ item.password }}"
+    groups: wheel
+    state: present
+  with_items:
+  - "{{ user_info }}"
+
+- name: ~/.ssh for user_infos exsit
+  file:
+    path: "/home/{{item.name}}/.ssh"
+    state: directory
+    owner: "{{ item.name }}"
+    group: "{{ item.name }}"
+    mode: 0700
+  with_items:
+  - "{{ user_info }}"
+
+- name: authorized keys is deployed
+  copy:
+    src: "authorized_keys_for_{{item.name}}"
+    dest: "/home/{{item.name}}/.ssh/authorized_keys"
+    owner: "{{ item.name }}"
+    group: "{{ item.name }}"
+    mode: 0600
+  with_items:
+  - "{{ user_info }}"
+
+- name: sudo configured
+  copy:
+    src="sudoers"
+    dest="/etc/sudoers"
+    owner=root
+    group=root
+    mode=0440
+
+#- name: create key
+#  user:
+#    shell: /bin/bash
+#    generate_ssh_key: yes
+
+
+

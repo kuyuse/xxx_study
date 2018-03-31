@@ -1,0 +1,3 @@
+rbenv_install_dest: /opt/rbenv
+ruby_build_install_dest: /opt/rbenv/plugins/ruby-build
+ruby_version: 2.4.2

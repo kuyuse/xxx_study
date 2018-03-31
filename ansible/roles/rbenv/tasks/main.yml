@@ -1,0 +1,71 @@
+# rubyがインストールされているかチェックを行う
+- name: rbenv | ruby check
+  shell: which ruby
+  register: _ruby_install_check
+  failed_when: _ruby_install_check.rc not in [0, 1]
+  changed_when: false
+
+# rbenvを格納するためのディレクトリを作成する
+- name: rbenv | create directory rbenv git clone
+  file:
+    path: "{{ rbenv_install_dest }}"
+    state: directory
+  when: _ruby_install_check.rc == 1
+
+# gitからrbenvをgit cloneする
+- name: rbenv | git clone rbenv
+  git:
+    repo: https://github.com/sstephenson/rbenv.git
+    dest: "{{ rbenv_install_dest }}"
+  when: _ruby_install_check.rc == 1
+
+# ruby-buildを格納するためのディレクトリを作成する
+- name: rbenv | create directory ruby-build
+  file:
+    path: "{{ ruby_build_install_dest }}"
+    state: directory
+  when: _ruby_install_check.rc == 1
+
+# ruby-buildをgit cloneする
+- name: rbenv | git clone ruby-build
+  git:
+    repo: https://github.com/sstephenson/ruby-build.git
+    dest: "{{ ruby_build_install_dest }}"
+  when: _ruby_install_check.rc == 1
+
+# 必要なパッケージをinstallする
+- name: rbenv | package install
+  yum:
+    name: "{{ item }}"
+    state: latest
+  with_items:
+    - gcc
+    - zlib-devel
+    - readline-devel
+    - openssl-devel
+    - rubygems
+
+# 環境変数を設定
+- name: rbenv | set environment by copy file
+  copy:
+    src: rbenv.sh
+    dest: /etc/profile.d/
+  when: _ruby_install_check.rc == 1
+
+# rubyのバージョンをチェックする
+- name: rbenv | ruby version chcek
+  shell: bash -lc "rbenv versions | grep {{ ruby_version }}"
+  register: _rbenv_version_check
+  failed_when: _rbenv_version_check.rc not in [0, 1]
+  changed_when: false
+
+# rubyのインストール
+- name: rbenv | ruby install
+  shell: bash -lc "rbenv install {{ ruby_version }}"
+  when: _rbenv_version_check.rc == 1
+
+# rubyのバージョンを指定する
+- name: rbenv | set ruby version
+  shell: bash -lc "rbenv global {{ ruby_version }}"
+  when: _rbenv_version_check.rc == 1
+

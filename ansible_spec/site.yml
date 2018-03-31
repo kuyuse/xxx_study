@@ -1,0 +1,8 @@
+- name: test
+  hosts: vagrant
+  become: true
+
+  roles:
+    - nginx
+    - rbenv
+

@@ -1,0 +1,19 @@
+- name: common
+  hosts: common
+  become: true
+
+  vars: 
+    - ansible_ssh_port: '{{ ssh_port }}'
+    - ansible_ssh_user: '{{ ssh_user }}'
+    - ansible_ssh_pass: '{{ ssh_pass }}'
+
+  roles:
+    - common
+    - sshd
+
+- name: web
+  hosts: web_server
+  become: true
+
+  roles:
+    - nginx

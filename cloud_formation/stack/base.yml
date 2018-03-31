@@ -1,0 +1,186 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+  WEBInstanceType:
+    Description: "EC2 instance type"
+    Type: String
+    Default: t2.micro
+
+  DBInstanceType:
+    Description: "EC2 instance type"
+    Type: String
+    Default: t2.micro
+
+Resources:
+# create VPC
+  CFnVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      Tags:
+      - Key: Name
+        Value: CFnVPC
+
+# create IGW
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+      - Key: Name
+        Value: CFnVPC-IGW
+
+  AttachGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref CFnVPC
+      InternetGatewayId: !Ref InternetGateway
+
+# create Subnet
+  PublicSubnet:
+    Type: AWS::EC2::Subnet
+    DependsOn: AttachGateway
+    Properties:
+      VpcId: !Ref CFnVPC
+      CidrBlock: 10.0.1.0/24
+      # MapPublicIpOnLaunch: 'true' # このサブネットで起動されたインスタンスがパブリック IP アドレスを受け取るかどうかを示します。
+      Tags:
+      - Key: Name
+        Value: CFnVPC-PublicSubnet
+
+  PublicSubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet
+      RouteTableId: !Ref PublicRouteTable
+
+  PrivateSubnet:
+    Type: AWS::EC2::Subnet
+    DependsOn: AttachGateway
+    Properties:
+      VpcId: !Ref CFnVPC
+      CidrBlock: 10.0.2.0/24
+      # MapPublicIpOnLaunch: 'true'
+      Tags:
+      - Key: Name
+        Value: CFnVPC-PrivateSubnet
+
+#  PrivateSubnetRouteTableAssociation:
+#    Type: AWS::EC2::SubnetRouteTableAssociation
+#    Properties:
+#      SubnetId: !Ref PrivateSubnet
+#      RouteTableId: !Ref PrivateRouteTable
+
+# create RouteTable
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    DependsOn: AttachGateway
+    Properties:
+      VpcId: !Ref CFnVPC
+      Tags:
+      - Key: Name
+        Value: CFnVPC-PublicRoute
+
+  PublicRoute:
+    Type: AWS::EC2::Route
+    DependsOn: AttachGateway
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+#  PrivateRouteTable:
+#    Type: AWS::EC2::RouteTable
+#    DependsOn: AttachGateway
+#    Properties:
+#      VpcId: !Ref CFnVPC
+#      Tags:
+#      - Key: Name
+#        Value: CFnVPC-PrivateRoute
+#
+#  PrivateRoute:
+#    Type: AWS::EC2::Route
+#    DependsOn: AttachGateway
+#    Properties:
+#      RouteTableId: !Ref PrivateRouteTable
+#      DestinationCidrBlock: 10.0.0.0/16
+#      GatewayId: !Ref InternetGateway
+
+# create Security Group
+  PublicSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Ref CFnVPC
+      GroupDescription: "Allow SSH,http,https to client host"
+      SecurityGroupIngress:
+        - IpProtocol: "tcp"
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: "tcp"
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: "tcp"
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+
+  PrivateSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: "Allow SSH,mysql to client host"
+      VpcId: !Ref CFnVPC
+      SecurityGroupIngress:
+        - IpProtocol: "tcp"
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 10.0.1.0/24
+        - IpProtocol: "tcp" # mysql
+          FromPort: 3306
+          ToPort: 3306
+          CidrIp: 10.0.1.0/24
+
+# create EC2
+  Web:
+    Type: AWS::EC2::Instance
+    DependsOn: PublicSubnet
+    DependsOn: PublicSecurityGroup
+    Properties:
+      ImageId: ami-428aa838 # Amazon Linux 2
+      # AssociatePublicIpAddress: "true"
+      # DeleteOnTermination: true
+      # DeviceIndex: "0"
+      # SecurityGroupIds:
+      #   - !Ref PublicSecurityGroup
+      # SubnetId: !Ref PublicSubnet
+      InstanceType: !Ref WEBInstanceType
+      NetworkInterfaces:
+       - AssociatePublicIpAddress: "true"
+         DeviceIndex: "0"
+         GroupSet:
+           - !Ref PublicSecurityGroup
+         SubnetId: !Ref PublicSubnet
+      Tags:
+      - Key: Name
+        Value: CFnVPC-Web
+
+  DB:
+    Type: AWS::EC2::Instance
+    DependsOn: PrivateSubnet
+    DependsOn: PrivateSecurityGroup
+    Properties:
+      ImageId: ami-428aa838 # Amazon Linux 2
+      # AssociatePublicIpAddress: true
+      # DeleteOnTermination: true
+      # DeviceIndex: 0
+      # SecurityGroupIds:
+      #   - !Ref PrivateSecurityGroup
+      # SubnetId: !Ref PrivateSubnet
+      InstanceType: !Ref DBInstanceType
+      NetworkInterfaces:
+        - DeviceIndex: "0"
+          GroupSet:
+            - !Ref PrivateSecurityGroup
+          SubnetId: !Ref PrivateSubnet
+      Tags:
+      - Key: Name
+        Value: CFnVPC-DB
