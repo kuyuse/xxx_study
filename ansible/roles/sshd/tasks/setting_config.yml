@@ -1,0 +1,89 @@
+---
+- name: sshd | ec2 module
+  local_action:
+    module: ec2_instance_facts
+    region: "{{ aws.region }}"
+    filters:
+      # タグでインスタンスの絞り込みを行う
+      "tag:Env": "{{ env }}"
+  register: _ec2_instance_meta
+ 
+ 
+- name: debug instances infomation
+  debug:
+    var: _ec2_instance_meta.instances
+ 
+ 
+  # メタ情報からinstance id のリストを作成する
+- name: debug for _ec2_instance_id
+  set_fact:
+     _instance_Name_list: >-
+      {%- set list = [] -%}
+      {%- for i in range(_ec2_instance_meta.instances|length) -%}
+      {%-   set _ = list.append(_ec2_instance_meta.instances[i].tags.Name) -%}
+      {%- endfor -%}
+      {{ list }}
+     _instance_id_list: >-
+      {%- set list = [] -%}
+      {%- for i in range(_ec2_instance_meta.instances|length) -%}
+      {%-   set _ = list.append(_ec2_instance_meta.instances[i].instance_id) -%}
+      {%- endfor -%}
+      {{ list }}
+     _private_ip_list: >-
+      {%- set list = [] -%}
+      {%- for i in range(_ec2_instance_meta.instances|length) -%}
+      {%-   set _ = list.append(_ec2_instance_meta.instances[i].private_ip_address) -%}
+      {%- endfor -%}
+      {{ list }}
+     _public_ip_list: >-
+      {%- set list = [] -%}
+      {%- for i in range(_ec2_instance_meta.instances|length) -%}
+      {%- if (_ec2_instance_meta.instances[i].public_ip_address) is defined -%}
+      {%-   set _ = list.append(_ec2_instance_meta.instances[i].public_ip_address) -%}
+      {%- endif -%}
+      {%- endfor -%}
+      {{ list }}
+     _public_dns_list: >-
+      {%- set list = [] -%}
+      {%- for i in range(_ec2_instance_meta.instances|length) -%}
+      {%- if (_ec2_instance_meta.instances[i].public_dns_name) != "" -%}
+      {%-   set _ = list.append(_ec2_instance_meta.instances[i].public_dns_name) -%}
+      {%- endif -%}
+      {%- endfor -%}
+      {{ list }}
+
+
+
+
+# 対象インスタンスの名前の表示
+- name: show target instance Name
+  debug:
+    var: "{{ item }}"
+  with_items: _instance_Name_list
+
+# 対象インスタンスのidの表示
+- name: show target instance ids
+  debug:
+    var: "{{ item }}"
+  with_items: _instance_id_list
+
+# 対象インスタンスのipの表示
+- name: show target public ip ids
+  debug:
+    var: "{{ item }}"
+  with_items: _public_ip_list
+
+# 対象インスタンスのipの表示
+- name: show target public dns ids
+  debug:
+    var: "{{ item }}"
+  with_items: _public_dns_list
+
+
+- name: sshd | make ssh_config
+  template:
+    src: ssh_config.j2 
+    dest: "~/.ssh/config"
+    #dest: "~/.ssh/ssh_config"
+    mode: "644"
+    backup: yes

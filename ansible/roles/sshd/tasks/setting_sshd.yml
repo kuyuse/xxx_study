@@ -1,0 +1,60 @@
+
+- name: rootユーザのログイン禁止
+  lineinfile:
+    dest: /etc/ssh/sshd_config
+    regexp: "^PermitRootLogin"
+    insertafter: "^#PermitRootLogin"
+    line: "PermitRootLogin no"
+
+- name: ユーザの制限
+  lineinfile:
+    dest: /etc/ssh/sshd_config
+    line: "AllowUsers ansible"
+
+- name: パスワード認証の無効化
+  lineinfile:
+    dest: /etc/ssh/sshd_config
+    regexp: "^PasswordAuthentication"
+    insertafter: "^#PasswordAuthentication"
+    line: "PasswordAuthentication no"
+ 
+- name: チャレンジ・レスポンス認証の無効化
+  lineinfile:
+    dest: /etc/ssh/sshd_config
+    regexp: "^ChallengeResponseAuthentication"
+    insertafter: "^#ChallengeResponseAuthentication"
+    line: "ChallengeResponseAuthentication no"
+
+#- name: "待受ポートを {{ sshd_port }} に変更"
+#  lineinfile:
+#    dest: /etc/ssh/sshd_config
+#    regexp: "^Port"
+#    insertafter: "^#Port"
+#    line: "Port {{ sshd_port }}"
+
+- name: 再起動
+  service:
+    name: sshd
+    state: restarted
+
+#- name: "firewalld ポート {{ sshd_port }}/tcp のオープン"
+#  firewalld:
+#    port: "{{ sshd_port }}/tcp"
+#    permanent: true
+#    state: enabled
+#    immediate: true
+
+#- name: "firewalld サービス ssh のクローズ"
+#  firewalld:
+#    service: ssh
+#    permanent: true
+#    state: disabled
+#    immediate: true
+
+#- name: "firewalld ポート 22/tcp のクローズ"
+#  firewalld:
+#    port: 22/tcp
+#    permanent: true	
+#    state: disabled
+#    immediate: true
+

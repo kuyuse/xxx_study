@@ -1,0 +1,7 @@
+- name: web_server
+  hosts: web_server
+  become: yes
+
+  roles:
+    - nginx
+

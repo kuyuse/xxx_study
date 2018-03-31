@@ -1,0 +1,11 @@
+{% for i in range(_public_ip_list|length) %}
+
+Host {{ _public_ip_list[i] }}
+  User ec2-user
+  HostName {{ _public_dns_list[i] }}
+  IdentityFile ~/.ssh/key.pem
+  StrictHostKeyChecking no
+  UserKnownHostsFile /dev/null
+
+{% endfor %}
+

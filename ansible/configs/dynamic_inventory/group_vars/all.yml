@@ -1,0 +1,7 @@
+ssh_port: 22
+ssh_user: vagrant
+ssh_pass: vagrant
+
+
+aws:
+  region: us-east-1
