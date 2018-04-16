@@ -1,0 +1,6 @@
+- hosts: vagrant_db
+  become: yes
+
+  roles:
+    - python
+

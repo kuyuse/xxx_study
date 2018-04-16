@@ -1,0 +1,15 @@
+python:
+  version:
+    x :  3
+    xx:  3.6
+    xxx: 3.6.4
+
+download_url: https://www.python.org/ftp/python/3.6.4/Python-3.6.4.tgz
+
+dest_url: /usr/local
+
+pip:
+  version:
+    x:  3
+    xx: 3.6
+
