@@ -1,0 +1,111 @@
+---
+# インストール済みの場合は以後の処理を行わない
+- name: python | install check
+  shell: bash -lc "python3 -V | grep '{{ python.version.xxx }}'"
+  register: _python_install_check
+  failed_when: _python_install_check.rc not in [ 0, 1]
+  changed_when: false
+
+
+- name: "python | wget Python-{{ python.version.xxx }}.tgz"
+  get_url:
+    url: "{{ download_url }}"
+    dest: "{{ dest_url }}"
+  when: _python_install_check.rc == 1
+
+
+- name: "python | tar xvzf Python-{{ python.version.xxx }}.tgz"
+  shell: "tar xvzf {{ dest_url }}/Python-{{ python.version.xxx }}.tgz -C {{ dest_url}}"
+  when: _python_install_check.rc == 1
+
+
+- name: python | remove python.tgz
+  file:
+    path: "{{ dest_url }}/Python-{{ python.version.xxx }}.tgz"
+    state: absent
+  when: _python_install_check.rc == 1
+
+
+- name: python | set configure
+  command: ./configure --prefix=/usr/local --with-ensurepip
+  args:
+    chdir: "{{ dest_url }}/Python-{{ python.version.xxx }}/"
+  when: _python_install_check.rc == 1
+
+
+- name: python | install pip package
+  yum:
+    name: "{{ item }}"
+  with_items:
+    - zlib-devel
+    - openssl-devel
+    - tk-devel
+  when: _python_install_check.rc == 1
+
+
+- name: python | make
+  command: make
+  args:
+    chdir: "{{ dest_url }}/Python-{{ python.version.xxx }}/"
+  when: _python_install_check.rc == 1
+
+
+- name: python | make install
+  command: make install
+  args:
+    chdir: "{{ dest_url}}/Python-{{ python.version.xxx }}/"
+  when: _python_install_check.rc == 1
+
+
+# リンクの存在チェック
+- name: python | python link check
+  shell: "ls /bin | grep '{{ python.version.x }}'"
+  register: _python_link_check
+  failed_when: _python_link_check.rc not in [ 0, 1]
+  changed_when: false
+  when: _python_install_check.rc == 1
+
+
+- name: python | pip link check
+  shell: "ls /bin | grep '{{ pip.version.x }}'"
+  register: _pip_link_check
+  failed_when: _pip_link_check.rc not in [ 0, 1]
+  changed_when: false
+  when: _python_install_check.rc == 1
+
+
+# リンクは削除する
+- name: python | remove python link
+  file:
+    path: "/bin/python{{ python.version.x }}"
+    state: absent
+  when:
+    - _python_install_check.rc == 1
+    - _python_link_check.rc == 1
+
+
+- name: python | remove pip link
+  file:
+    path: "/bin/pip{{ pip.version.x }}"
+    state: absent
+  when:
+    - _python_install_check.rc == 1
+    - _pip_link_check == 1
+
+
+# sudoでインストールしたpythonを利用できるようにリンクを作成する
+- name: python | create link of python
+  file:
+    src: "/usr/local/bin/python{{ python.version.xx }}"
+    dest: "/bin/python{{ python.version.x }}"
+    state: link
+  when: _python_install_check.rc == 1 or _python_link_check.rc | default("") == "" or _python_link_check.rc == 1 
+
+
+- name: python | create link of pip
+  file:
+    src: "/usr/local/bin/pip{{ pip.version.xx }}"
+    dest: "/bin/pip{{ pip.version.x }}"
+    state: link
+  when: _python_install_check.rc == 1  or _pip_link_check.rc | default("") == "" or _pip_link_check == 1 
+
