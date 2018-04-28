@@ -1,4 +1,4 @@
-- hosts: vagrant_db
+- hosts: vagrant_web
   become: yes
 
   roles:

@@ -1,6 +1,7 @@
-- hosts: localhost
+- hosts: vagrant_web
   become: yes
 
   roles:
+    - git
     - rbenv
 
