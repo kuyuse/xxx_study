@@ -2,18 +2,15 @@
   hosts: common
   become: true
 
-  vars: 
-    - ansible_ssh_port: '{{ ssh_port }}'
-    - ansible_ssh_user: '{{ ssh_user }}'
-    - ansible_ssh_pass: '{{ ssh_pass }}'
-
   roles:
     - common
-    - sshd
+    #- sshd
 
 - name: web
-  hosts: web_server
+  hosts: vagrant_web
   become: true
 
   roles:
     - nginx
+    - rbenv
+    - python

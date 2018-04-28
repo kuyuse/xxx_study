@@ -2,6 +2,5 @@
   become: yes
 
   roles:
-    - git
-    - rbenv
+    - mongodb
 

@@ -2,9 +2,9 @@ python:
   version:
     x :  3
     xx:  3.6
-    xxx: 3.6.4
+    xxx: 3.6.5
 
-download_url: https://www.python.org/ftp/python/3.6.4/Python-3.6.4.tgz
+download_url: https://www.python.org/ftp/python/3.6.5/Python-3.6.5.tgz
 
 dest_url: /usr/local
 
