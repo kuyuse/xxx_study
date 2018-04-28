@@ -1,0 +1,28 @@
+---
+- name: copy mongodb-org repos
+  copy:
+    src: "mongodb-org-{{ repo_version }}.repo"
+    dest: "/etc/yum.repos.d/mongodb-org-{{ repo_version }}.repo"
+
+- name: install mongod
+#  yum:
+#    name: mongodb-org
+#    state: latest
+  yum:
+    name: "{{ item }}"
+    #state: present
+  with_items:
+    - mongodb-org-{{ yum_version }}
+    - mongodb-org-server-{{ yum_version }}
+    - mongodb-org-shell-{{ yum_version }}
+    - mongodb-org-mongos-{{ yum_version }}
+    - mongodb-org-tools-{{ yum_version }}
+  
+  notify: restart mongod
+
+- name: be sure mongod is running and enabled
+  service:
+    name: mongod
+    state: started
+    enabled: yes 
+

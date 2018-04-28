@@ -1,0 +1,6 @@
+- hosts: vagrant_web
+  become: yes
+
+  roles:
+    - mongodb
+
