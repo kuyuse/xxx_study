@@ -1,0 +1,12 @@
+#- name: git | check
+#  shell: git --version
+#  register: _git_install_check
+#  failed_when: _git_install_check.rc not in [ 0, 1]
+#  changed_when: false
+#
+- name: git | install
+  yum:
+    name: git
+    state: latest
+#  when: _git_install_check.rc == 1
+
