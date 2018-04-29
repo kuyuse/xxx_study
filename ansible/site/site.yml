@@ -3,7 +3,7 @@
   become: true
 
   roles:
-    - common
+    #- common
     #- sshd
 
 - name: web
@@ -14,3 +14,4 @@
     - nginx
     - rbenv
     - python
+    - mongodb
