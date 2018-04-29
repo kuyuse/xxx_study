@@ -12,6 +12,7 @@
 
   roles:
     - nginx
+    - git
     - rbenv
     - python
     - mongodb
