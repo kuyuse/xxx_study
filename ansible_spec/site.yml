@@ -1,8 +1,8 @@
 - name: test
-  hosts: vagrant
+  hosts: vagrant_web
   become: true
 
   roles:
     - nginx
-    - rbenv
+    - python
 
