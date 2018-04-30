@@ -1,0 +1,4 @@
+---
+- name: source bash_profile
+  shell: bash -lc "source /root/.bash_profile"
+

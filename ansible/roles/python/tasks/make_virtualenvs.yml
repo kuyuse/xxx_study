@@ -1,0 +1,15 @@
+---
+- name: virtualenvs | change directory
+  shell: "cd {{ dest_url }}"
+
+- name: virtualenvs | make directory
+  file:
+    path: "{{ dest_url }}/.virtualenvs"
+    state: directory
+    # owner: root
+    # group: root
+    mode: 0755
+
+- name: virtualenvs | make virtualenvs
+  shell: "{{ dest_url }}/bin/pyvenv-{{ python.version.xx }} .virtualenvs/{{ project_name }}"
+
