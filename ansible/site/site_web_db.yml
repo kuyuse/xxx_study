@@ -6,7 +6,7 @@
     #- common
     #- sshd
 
-- name: setting m/w
+- name: setting for web
   hosts: vagrant_web
   become: true
 
@@ -15,4 +15,11 @@
     - git
     - rbenv
     - python
+
+- name: setting for db
+  hosts: vagrant_db
+  become: true
+
+  roles:
+    - git
     - mongodb
